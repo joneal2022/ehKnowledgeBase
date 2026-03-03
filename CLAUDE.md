@@ -79,6 +79,9 @@ git commit -m "<type>: <short description>"
 git push
 ```
 
+> **Repo:** `https://github.com/joneal2022/ehKnowledgeBase.git` (branch: `main`)
+> Git user is configured globally on this machine. `git push` will always go to the correct private repo.
+
 ### Commit Types
 - `feat:` — new feature or functionality
 - `fix:` — bug fix

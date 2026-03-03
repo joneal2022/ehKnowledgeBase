@@ -72,6 +72,25 @@
 
 ## 4. Git Discipline
 
+### Branching Strategy
+
+- `main` — always stable. Only receives merges when a full group is complete and tested.
+- `group/N-name` — one branch per group. All task commits go here.
+
+**Branch naming:** `group/1-infrastructure`, `group/2-core-services`, `group/3-ui-shell`, `group/4-langgraph-pipeline`, etc.
+
+**At the start of each group:**
+```bash
+git checkout main
+git checkout -b group/N-name
+git push -u origin group/N-name
+```
+
+**At the end of each group — STOP. Do NOT merge yourself.**
+Tell the user the group is complete and ask them to approve the merge to `main`.
+
+---
+
 ### Commit After Every Successful Change
 ```bash
 git add -A
@@ -79,7 +98,8 @@ git commit -m "<type>: <short description>"
 git push
 ```
 
-> **Repo:** `https://github.com/joneal2022/ehKnowledgeBase.git` (branch: `main`)
+> **Repo:** `https://github.com/joneal2022/ehKnowledgeBase.git`
+> **Current branch:** always a `group/N-name` branch — never commit directly to `main`.
 > Git user is configured globally on this machine. `git push` will always go to the correct private repo.
 
 ### Commit Types

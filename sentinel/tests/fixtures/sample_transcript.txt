@@ -1,0 +1,57 @@
+This is a sample transcript for pipeline testing. It contains content across all three domains.
+
+[00:00] Welcome everyone to this week's community call. Let me share my screen.
+
+[00:30] Today we're going to talk about three things: our new deployment process using GitHub Actions,
+some exciting work we've been doing with RAG pipelines for one of our clients, and then Jack
+is going to share some updates on the business development side.
+
+[02:00] So first up, deployment. We've moved everything over to GitHub Actions. The key thing
+here is we have a staging environment that runs on every PR merge, and production deploys
+only happen when you tag a release. We use environment secrets for all API keys.
+
+[05:00] We also added pre-commit hooks for formatting and linting. The team was spending too
+much time in code review on style issues, so this automates that completely. If the hooks
+fail, the commit doesn't happen.
+
+[10:00] Now let me talk about the RAG work. One of our clients needed to search across 50,000
+internal documents. We built a retrieval system using pgvector with a hybrid search approach —
+combining BM25 keyword search with vector similarity and then using reciprocal rank fusion
+to merge the results.
+
+[15:00] The key architectural decision was whether to use a hosted vector database or self-host.
+We went with self-hosted pgvector because the client already had PostgreSQL, and adding
+vector support was just enabling an extension. The total cost increase was basically zero.
+
+[20:00] For the embedding model, we used nomic-embed-text running locally on Ollama. 768 dimensions,
+very fast, and the quality was excellent for this use case. The critical rule we enforced was
+one embedding model everywhere — never mix models or your similarity scores become meaningless.
+
+[28:00] Alright, Jack on the business side.
+
+[28:30] Thanks. So we closed two new deals this quarter, both AI-adjacent. The first is a
+traditional custom software project — a logistics company in Houston needs a warehouse
+management system. Good revenue, straightforward scope.
+
+[32:00] The second deal is more interesting. A Dallas law firm wants us to build an AI document
+review tool. They're uploading contracts and want the system to flag unusual clauses and
+summarize key terms. This is squarely in our new AI solutions practice.
+
+[36:00] For pricing strategy on AI projects, we've been moving toward value-based pricing
+rather than hourly rates. The law firm deal is priced at $85,000 fixed, which would have
+been $55,000 under our old hourly model. The client is happy because they know the total cost.
+
+[40:00] One thing I want everyone to understand is that these AI projects have a much higher
+perceived value to clients than traditional software. A RAG system that saves 20 hours a week
+of manual document review is worth hundreds of thousands of dollars per year to them.
+
+[45:00] Questions from the team?
+
+[45:30] Can we use Kimi K2 instead of DeepSeek for the report generation? It tends to give
+better structured output in my experience.
+
+[46:00] Yes, the model routing is all config-based, so you can switch by changing an environment
+variable. Never hardcode the model name in the code.
+
+[48:00] That's all for today. Next week we'll do a deep dive on the agent orchestration
+patterns we've been using with LangGraph. See everyone then.

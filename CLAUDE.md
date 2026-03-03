@@ -70,6 +70,64 @@
 
 ---
 
+## 3.5 Testing Requirements
+
+**"Test it" is not optional.** Before every commit, the relevant tests must pass.
+
+### Two Test Tiers
+
+| Tier | When | How to run | Required for |
+|------|------|-----------|-------------|
+| **A — Unit tests** | No Docker needed | `uv run pytest tests/ -v` | Every commit |
+| **B — Integration tests** | Docker running | `uv run pytest tests/ -v -m integration` | Every group merge to `main` |
+
+### What to Test Per Task Type
+
+| Task type | Unit tests (Tier A) | Integration tests (Tier B) |
+|-----------|--------------------|-----------------------------|
+| **Config / env** | `get_model_for_task()`, defaults, env var overrides | — |
+| **DB models** | Enum values, column names, nullability, FK definitions | CRUD, CASCADE delete, tsvector/vector columns |
+| **Services** | Mock LLM/DB — test routing logic, output parsing | Real Ollama/DB calls |
+| **Pipeline nodes** | Mock all services — test state transitions | Real pipeline run on sample transcript |
+| **API endpoints** | `TestClient` with mock DB | Real DB + full request cycle |
+| **Migration** | `alembic heads` parses cleanly | `alembic upgrade head` + psql table list |
+
+### Minimum Coverage Per Task
+
+- **Task 1 (Infrastructure):** Test `config.py` settings + `get_model_for_task()` routing
+- **Task 2 (DB Models):** Test all enum values, all critical columns (`model_used`, `prompt_version`, `original_title`), model instantiation
+- **Task 3+ (Services):** Test each public function with mocked dependencies
+- **Task 9+ (Pipeline):** Test each node function with mocked LLM client and mocked DB session
+
+### Test File Locations
+
+```
+tests/
+├── conftest.py                   # shared fixtures (settings, async session)
+├── test_services/
+│   ├── test_config.py            # Task 1: config unit tests
+│   ├── test_llm_client.py        # Task 4
+│   ├── test_embedding_service.py # Task 5
+│   └── test_prompt_manager.py    # Task 6
+├── test_models/
+│   └── test_models.py            # Task 2: model unit tests
+├── test_pipeline/
+│   ├── test_classify.py          # Task 12: Tier 1 loops
+│   └── test_prompt_evolution.py  # Task 17: Tier 2 loops
+├── test_api/
+│   └── test_feedback.py          # Task 16
+└── fixtures/
+    └── sample_transcript.txt     # short fake transcript for pipeline tests
+```
+
+### Rules
+- **Never commit with failing tests.**
+- Mark integration tests: `@pytest.mark.integration` — they are skipped by default locally.
+- Don't write tests after the fact; write them as part of completing the task.
+- A task is NOT done until its Tier A tests pass.
+
+---
+
 ## 4. Git Discipline
 
 ### Branching Strategy

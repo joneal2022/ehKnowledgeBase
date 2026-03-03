@@ -13,8 +13,8 @@
 ### Tasks
 
 #### Group 1: Infrastructure
-- [ ] Task 1 — Docker Compose (5 services: app, worker, db, redis, ollama) + Dockerfile + .env.example + pyproject.toml
-- [ ] Task 2 — Database models (11 tables) + Alembic migrations
+- [x] Task 1 — Docker Compose (5 services: app, worker, db, redis, ollama) + Dockerfile + .env.example + pyproject.toml
+- [x] Task 2 — Database models (11 tables) + Alembic migrations
 
 #### Group 2: Core Services
 - [ ] Task 3 — YouTube extraction service (youtube-transcript-api, no API key)

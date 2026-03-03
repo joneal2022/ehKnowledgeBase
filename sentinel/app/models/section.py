@@ -28,6 +28,6 @@ class ContentSection(Base):
     domain: Mapped[DomainEnum | None] = mapped_column(Enum(DomainEnum), nullable=True)
     classification_confidence: Mapped[float | None] = mapped_column(Float, nullable=True)
     classification_reasoning: Mapped[str | None] = mapped_column(Text, nullable=True)
-    needs_review: Mapped[bool] = mapped_column(Boolean, default=False)
-    escalated_to_cloud: Mapped[bool] = mapped_column(Boolean, default=False)
+    needs_review: Mapped[bool] = mapped_column(Boolean, default=False, server_default="false")
+    escalated_to_cloud: Mapped[bool] = mapped_column(Boolean, default=False, server_default="false")
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())

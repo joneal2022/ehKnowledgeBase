@@ -13,14 +13,14 @@
 ### Current Group
 
 #### Group 2: Core Services
-- [ ] Task 3 — YouTube extraction service
+- [x] Task 3 — YouTube extraction service
   - `app/services/youtube.py`
   - `YouTubeService.extract(url)` → returns `{transcript, original_title, author, published_at, url}`
   - Uses `youtube-transcript-api` (no API key needed)
   - Graceful error if captions unavailable
   - Does NOT use generated title — stores original YouTube title as `original_title`
 
-- [ ] Task 4 — LLM client abstraction
+- [x] Task 4 — LLM client abstraction
   - `app/services/llm_client.py`
   - `LLMClient.complete(task, prompt, **kwargs)` — routes to local or cloud based on task
   - Local: Ollama HTTP API (`OLLAMA_LOCAL_URL`)
@@ -29,7 +29,7 @@
   - All calls use `get_model_for_task()` from config — no hardcoded model strings
   - Timeouts: 30s classification, 120s reports
 
-- [ ] Task 5 — Embedding service
+- [x] Task 5 — Embedding service
   - `app/services/embedding.py`
   - `EmbeddingService` singleton — `get_embedding_service()` factory
   - `embed(text)` → `list[float]` (768d, nomic-embed-text)

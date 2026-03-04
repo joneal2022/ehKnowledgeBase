@@ -20,6 +20,23 @@
 
 ## Session Log
 
+### 2026-03-03 — Tasks 3–5 Complete: YouTube Service, LLM Client, Embedding Service
+**What:** Implemented three core services for Group 2. Each followed testing-gate protocol (write → test → commit).
+**Files:**
+- `app/services/youtube.py` — `YouTubeService.extract()`: video ID parsing (4 URL formats), transcript fetch via `youtube-transcript-api` v0.6+ instance API, oembed metadata, `original_title` preserved raw per DR-4
+- `tests/test_services/test_youtube.py` — 17 tests covering URL parsing, transcript joining, metadata failure tolerance, BR-1/DR-4 original title rule
+- `app/services/llm_client.py` — `LLMClient.complete(task, prompt)`: task routing (LOCAL/CLOUD), `TASK_ROUTING` dict, `parse_llm_json()` with code-fence stripping, model from config only (TC-1), timeouts per task
+- `tests/test_services/test_llm_client.py` — 21 tests: JSON parsing, routing table, model-from-config enforcement, unknown task defaults to cloud
+- `app/services/embedding.py` — `EmbeddingService` singleton: `embed()`, `embed_batch()`, 768d dimension verify on first call, `DimensionMismatchError`, `get_embedding_service()` factory
+- `tests/test_services/test_embedding.py` — 17 tests: vector dimensions, batch, model-from-settings (TC-1), dimension verification once, HTTP/connection error propagation, singleton identity
+**Status:** Working — 89 Tier A tests passing
+**Notes:**
+- youtube-transcript-api v0.6+ uses instance method `api.fetch(video_id)` not class method `get_transcript()` — API breaking change
+- Settings patching in embedding tests requires patching `app.services.embedding.settings`, not the module directly
+- Tasks 3/4/5 each committed separately on group/2-core-services
+
+---
+
 ### 2026-03-03 — Group 1 Complete: Integration Tests + Merge to Main + Doc Reorganisation
 **What:** Added Tier B integration tests for Group 1 (16 tests). Updated pyproject.toml with pytest markers. Reorganised all docs from repo root into `sentinel/docs/` and `sentinel/tasks/`. Replaced CLAUDE.md §3.5 with testing-gate skill reference. Installed `testing-gate` skill globally (`~/.claude/commands/`). Merged `group/1-infrastructure` → `main`.
 **Files:**

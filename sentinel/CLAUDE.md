@@ -70,7 +70,56 @@
 
 ---
 
+## 3.5 Testing Requirements
+
+**"Test it" is not optional.** Before every commit, the relevant tests must pass.
+
+### Protocol
+Use the `testing-gate` skill for ALL testing decisions. It defines:
+- How to derive tests from code (business logic, edge cases, contracts, errors, regressions)
+- The pre-commit gate sequence (identify → derive → write → run → verify → commit)
+- Test quality rules and mocking strategy
+- Language-specific patterns
+
+### Project-Specific Context
+All project-specific testing details live in `docs/TEST_CONTEXT.md`:
+- Business requirements to test
+- Technical constraints to enforce
+- Test tiers and commands
+- Task-to-test mapping
+- Fixtures and test data
+- Known gotchas
+
+**If `docs/TEST_CONTEXT.md` doesn't exist, create one before writing tests.**
+
+### Rules
+- **Never commit with failing tests.**
+- **A task is NOT done until its Tier A tests pass.**
+- **Write tests AS PART of the task, not after.**
+- Mark integration tests: `@pytest.mark.integration` — skipped by default locally.
+
+---
+
 ## 4. Git Discipline
+
+### Branching Strategy
+
+- `main` — always stable. Only receives merges when a full group is complete and tested.
+- `group/N-name` — one branch per group. All task commits go here.
+
+**Branch naming:** `group/1-infrastructure`, `group/2-core-services`, `group/3-ui-shell`, `group/4-langgraph-pipeline`, etc.
+
+**At the start of each group:**
+```bash
+git checkout main
+git checkout -b group/N-name
+git push -u origin group/N-name
+```
+
+**At the end of each group — STOP. Do NOT merge yourself.**
+Tell the user the group is complete and ask them to approve the merge to `main`.
+
+---
 
 ### Commit After Every Successful Change
 ```bash
@@ -79,7 +128,8 @@ git commit -m "<type>: <short description>"
 git push
 ```
 
-> **Repo:** `https://github.com/joneal2022/ehKnowledgeBase.git` (branch: `main`)
+> **Repo:** `https://github.com/joneal2022/ehKnowledgeBase.git`
+> **Current branch:** always a `group/N-name` branch — never commit directly to `main`.
 > Git user is configured globally on this machine. `git push` will always go to the correct private repo.
 
 ### Commit Types
@@ -173,6 +223,7 @@ git push
 | What's been done | `docs/PROGRESS.md` |
 | What's being worked on now | `tasks/todo.md` |
 | Environment variables | `.env.example` |
+| Project-specific test context | `docs/TEST_CONTEXT.md` |
 
 ---
 

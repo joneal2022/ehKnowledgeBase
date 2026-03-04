@@ -20,6 +20,30 @@
 
 ## Session Log
 
+### 2026-03-03 — Tasks 7–8 Complete: HTMX UI Shell + Add Video Form
+**What:** Wired up FastAPI app, base layout, and the Add Video → dashboard feed flow.
+**Files:**
+- `app/main.py` — FastAPI app with lifespan, static mount, routers
+- `app/templates_env.py` — Jinja2Templates singleton
+- `app/pages/dashboard.py` — `GET /` (dashboard), `GET /sources/feed` (HTMX fragment)
+- `app/api/sources.py` — `POST /api/sources/youtube` (202 + HX-Trigger), `GET /api/sources`
+- `app/schemas/source.py` — `YouTubeSubmitRequest` (YouTube URL validation), `SourceResponse`
+- `app/templates/base.html` — HTMX 2.0.4, Tailwind CDN, hx-boost
+- `app/templates/components/nav.html` — Sentinel brand + Dashboard/Knowledge/Chat/Quality links
+- `app/templates/pages/dashboard.html` — Add Video form (hx-post) + source list (hx-trigger=refreshSources)
+- `app/templates/components/video_card.html` — title/url/author/status card
+- `app/templates/components/processing_status.html` — status badge (queued/processing/done/failed); processing card auto-polls every 5s
+- `app/templates/fragments/source_list.html` — empty state or list of cards
+- `tests/test_api/test_dashboard.py` — 12 tests (page routes)
+- `tests/test_api/test_sources.py` — 16 tests (schema validation, POST 202, HX-Trigger header, GET list)
+**Status:** Working — 155 Tier A tests passing
+**Notes:**
+- POST returns `HX-Trigger: refreshSources` header; source list div listens with `hx-trigger="load, refreshSources from:body"`
+- Processing status badge on in-progress cards uses `hx-trigger="every 5s"` to poll the feed endpoint
+- No actual Celery task yet — source is created as `pending` and stays there until Group 4
+
+---
+
 ### 2026-03-03 — Task 6 Complete: Prompt Manager + Base Prompt Files
 **What:** Implemented `PromptManager` with SHA256 versioning and first-use DB persistence. Created 7 prompt template files for all pipeline nodes.
 **Files:**

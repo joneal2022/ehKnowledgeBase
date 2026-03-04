@@ -55,7 +55,7 @@
 
 #### Group 3: Basic UI Shell
 - [x] Task 7 — Base HTMX layout + nav (base.html, home page, FastAPI app wired up)
-- [ ] Task 8 — Add Video form + dashboard feed (URL input, POST endpoint, status polling)
+- [x] Task 8 — Add Video form + dashboard feed (URL input, POST endpoint, status polling)
 
 #### Group 4: LangGraph Pipeline
 - [ ] Task 9 — Pipeline state + graph shell (PipelineState TypedDict, graph with node stubs)

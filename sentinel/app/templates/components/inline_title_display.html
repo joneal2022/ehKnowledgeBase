@@ -1,0 +1,10 @@
+{# Inline-editable title display — double-click to edit #}
+{# Params: source #}
+<h2 id="title-{{ source.id }}"
+    hx-get="/api/sources/{{ source.id }}/title-edit"
+    hx-trigger="dblclick"
+    hx-swap="outerHTML"
+    class="text-xl font-bold cursor-pointer hover:bg-gray-50 rounded px-1"
+    title="Double-click to edit">
+  {{ source.title or source.original_title or "Untitled" }}
+</h2>

@@ -1,0 +1,20 @@
+{# Inline title edit form — shown on double-click #}
+{# Params: source #}
+<form id="title-{{ source.id }}"
+      hx-patch="/api/sources/{{ source.id }}/title"
+      hx-swap="outerHTML"
+      hx-target="#title-{{ source.id }}"
+      class="flex gap-2 items-center">
+  <input type="text"
+         name="title"
+         value="{{ source.title or source.original_title or '' }}"
+         class="border border-gray-300 rounded px-2 py-1 flex-1 text-xl font-bold focus:outline-none focus:ring-2 focus:ring-blue-300"
+         autofocus>
+  <button type="submit"
+          class="bg-blue-500 text-white text-sm px-3 py-1 rounded hover:bg-blue-600">Save</button>
+  <button type="button"
+          hx-get="/api/sources/{{ source.id }}/title-display"
+          hx-target="#title-{{ source.id }}"
+          hx-swap="outerHTML"
+          class="text-gray-500 text-sm px-3 py-1 hover:text-gray-700">Cancel</button>
+</form>

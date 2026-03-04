@@ -10,15 +10,72 @@
 
 ## Current State
 
-**Phase:** Phase 1 — Group 1 (Infrastructure) complete, tests passing
-**Last Working Session:** 2026-03-02
-**Docker Status:** Not yet started (docker compose up not run — services defined, not running)
-**Database:** Migration written (0001_initial_schema.py) — not yet applied (needs Docker up)
-**Git Branch:** group/1-infrastructure
+**Phase:** Phase 1 — Group 2 (Core Services) in progress
+**Last Working Session:** 2026-03-03
+**Docker Status:** Docker Desktop installed and verified. DB starts with `docker compose up -d db` from `sentinel/`. sentinel_test DB exists and pgvector confirmed working.
+**Database:** Migration 0001 applied and verified against sentinel_test. All 11 tables confirmed. pgvector + tsvector columns passing integration tests.
+**Git Branch:** group/2-core-services
 
 ---
 
 ## Session Log
+
+### 2026-03-03 — Task 6 Complete: Prompt Manager + Base Prompt Files
+**What:** Implemented `PromptManager` with SHA256 versioning and first-use DB persistence. Created 7 prompt template files for all pipeline nodes.
+**Files:**
+- `app/pipeline/prompts/__init__.py` — package init
+- `app/pipeline/prompts/manager.py` — `PromptManager(session)`: `get_active_prompt()`, `get_prompt_version_hash()`, `get_strict_variant()`, `_save_base_prompt()`, `_load_base_prompt()`, `STRICT_SUFFIX`, `KNOWN_PROMPTS`
+- `app/pipeline/prompts/preprocess.py` — caption cleanup prompt
+- `app/pipeline/prompts/segment.py` — topical section splitting prompt (JSON array output)
+- `app/pipeline/prompts/classify.py` — domain classification prompt (matches CODE_PATTERNS.md example)
+- `app/pipeline/prompts/report_dev.py` — Dev/Tooling report prompt with business context
+- `app/pipeline/prompts/report_ai.py` — AI Solutions report prompt with business context
+- `app/pipeline/prompts/report_biz.py` — Business Dev report prompt with business context
+- `app/pipeline/prompts/synthesize.py` — Executive summary + title generation (matches CODE_PATTERNS.md)
+- `tests/test_pipeline/test_prompt_manager.py` — 38 tests: TC-5 all 7 files have `{few_shot_examples}`, DB-hit/miss behaviour, first-use save, SHA256 hash, strict variant, import error
+**Status:** Working — 127 Tier A tests passing
+**Notes:**
+- `get_active_prompt()` on first use saves base template to `prompt_versions` and returns it; second call finds it in DB
+- `get_prompt_version_hash()` returns `"base"` before any DB version exists
+- All report prompts include `BUSINESS_CONTEXT` preamble (15-dev shop, Louisiana, Dallas/Houston)
+- All 7 prompt files verified to have `{few_shot_examples}` placeholder (TC-5)
+
+---
+
+### 2026-03-03 — Tasks 3–5 Complete: YouTube Service, LLM Client, Embedding Service
+**What:** Implemented three core services for Group 2. Each followed testing-gate protocol (write → test → commit).
+**Files:**
+- `app/services/youtube.py` — `YouTubeService.extract()`: video ID parsing (4 URL formats), transcript fetch via `youtube-transcript-api` v0.6+ instance API, oembed metadata, `original_title` preserved raw per DR-4
+- `tests/test_services/test_youtube.py` — 17 tests covering URL parsing, transcript joining, metadata failure tolerance, BR-1/DR-4 original title rule
+- `app/services/llm_client.py` — `LLMClient.complete(task, prompt)`: task routing (LOCAL/CLOUD), `TASK_ROUTING` dict, `parse_llm_json()` with code-fence stripping, model from config only (TC-1), timeouts per task
+- `tests/test_services/test_llm_client.py` — 21 tests: JSON parsing, routing table, model-from-config enforcement, unknown task defaults to cloud
+- `app/services/embedding.py` — `EmbeddingService` singleton: `embed()`, `embed_batch()`, 768d dimension verify on first call, `DimensionMismatchError`, `get_embedding_service()` factory
+- `tests/test_services/test_embedding.py` — 17 tests: vector dimensions, batch, model-from-settings (TC-1), dimension verification once, HTTP/connection error propagation, singleton identity
+**Status:** Working — 89 Tier A tests passing
+**Notes:**
+- youtube-transcript-api v0.6+ uses instance method `api.fetch(video_id)` not class method `get_transcript()` — API breaking change
+- Settings patching in embedding tests requires patching `app.services.embedding.settings`, not the module directly
+- Tasks 3/4/5 each committed separately on group/2-core-services
+
+---
+
+### 2026-03-03 — Group 1 Complete: Integration Tests + Merge to Main + Doc Reorganisation
+**What:** Added Tier B integration tests for Group 1 (16 tests). Updated pyproject.toml with pytest markers. Reorganised all docs from repo root into `sentinel/docs/` and `sentinel/tasks/`. Replaced CLAUDE.md §3.5 with testing-gate skill reference. Installed `testing-gate` skill globally (`~/.claude/commands/`). Merged `group/1-infrastructure` → `main`.
+**Files:**
+- `sentinel/tests/test_integration/conftest.py` — DB fixture (apply_migrations, db_session with rollback)
+- `sentinel/tests/test_integration/test_migration.py` — 5 tests: single head, all tables, pgvector ext, vector(768) type, tsvector column
+- `sentinel/tests/test_integration/test_db_models.py` — 11 tests: CRUD, 5 CASCADE deletes, 768d vector insert, tsvector auto-populate, keyword search, BR-2 metadata
+- `sentinel/pyproject.toml` — added `markers` + `addopts = "-m 'not integration'"` (Tier A excludes Tier B by default)
+- `sentinel/CLAUDE.md` — moved to sentinel/, §3.5 replaced, TEST_CONTEXT.md added to ref map
+- `sentinel/docs/` — ARCHITECTURE.md, CODE_PATTERNS.md, REQUIREMENTS.md, PROGRESS.md moved here
+- `sentinel/tasks/todo.md` — moved here
+- `sentinel/docs/TEST_CONTEXT.md` — created (Sentinel-specific testing context)
+- `~/.claude/commands/testing-gate.md` — universal testing skill installed
+- `~/.claude/references/TEST_CONTEXT_TEMPLATE.md` — reusable template installed
+**Status:** All tests passing — Tier A: 34 passed, Tier B: 16 passed. Merged to main.
+**Notes:** Tier B requires Docker DB running (`docker compose up -d db`). Integration test sessions use apply_migrations fixture (downgrade base → upgrade head) then rollback per test. `.env` file must exist (copy from `.env.example`) for docker compose to start.
+
+---
 
 ### 2026-03-02 — Test Retrofit + CLAUDE.md Testing Rules
 **What:** Retrofitted missing tests for Tasks 1 & 2 (per CLAUDE.md §3 "test before commit" rule that was skipped). Updated CLAUDE.md with explicit §3.5 Testing Requirements section defining two test tiers (unit vs integration) and per-task-type test expectations.

@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+
+{% block title %}{{ domain_label }} — Sentinel{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+
+  <div class="flex items-center gap-3">
+    <a href="/" class="text-sm text-gray-400 hover:text-indigo-500">← Dashboard</a>
+    <h1 class="text-2xl font-bold">{{ domain_label }}</h1>
+    <span class="text-sm text-gray-400">{{ sources|length }} video{% if sources|length != 1 %}s{% endif %}</span>
+  </div>
+
+  {% if sources %}
+    <div class="space-y-4">
+      {% for source in sources %}
+        {% include "components/video_card.html" %}
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="text-center py-16 text-gray-400">
+      <p class="text-lg font-medium">No videos for {{ domain_label }} yet</p>
+      <p class="text-sm mt-1">Add and process a video to see it here.</p>
+    </div>
+  {% endif %}
+
+</div>
+{% endblock %}

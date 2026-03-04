@@ -31,8 +31,14 @@
   <div id="source-list"
        hx-get="/sources/feed"
        hx-trigger="load, refreshSources from:body"
-       hx-swap="innerHTML">
+       hx-swap="innerHTML"
+       hx-indicator="#source-list-skeleton">
     <!-- populated by HTMX -->
+  </div>
+  <div id="source-list-skeleton" class="htmx-indicator space-y-4">
+    {% for _ in range(3) %}
+      {% include "components/skeleton_card.html" %}
+    {% endfor %}
   </div>
 </section>
 

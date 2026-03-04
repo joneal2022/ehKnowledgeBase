@@ -8,7 +8,7 @@
 
 ## Current Phase: Phase 1 — Core Pipeline (MVP)
 
-### Status: Group 5 complete, awaiting Tier B + merge. Group 6 (Polish + Observability) is next.
+### Status: Group 6 complete (283 Tier A tests), awaiting Tier B + merge. Phase 1 MVP DONE.
 
 ### Current Group
 
@@ -70,10 +70,10 @@
 - [x] Task 16 — Feedback widgets + API (thumbs/stars, correction dropdown, inline title edit)
 - [x] Task 17 — Prompt evolution service (Tier 2: few-shot accumulation → prompt rebuild)
 
-#### Group 6: Polish + Observability
-- [ ] Task 18 — Video detail page (domain tabs, report cards, feedback widgets)
-- [ ] Task 19 — Observability (LangFuse tracing, trace_id in jobs, quality dashboard)
-- [ ] Task 20 — Polish + domain filter view (skeleton cards, retry button, mobile layout)
+#### Group 6: Polish + Observability ✅ (283 Tier A tests — awaiting Tier B + merge)
+- [x] Task 18 — Video detail page (domain tabs, report cards, feedback widgets)
+- [x] Task 19 — Observability (LangFuse tracing, trace_id in jobs, quality dashboard)
+- [x] Task 20 — Polish + domain filter view (skeleton cards, retry button, mobile layout)
 
 ---
 

@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+
+{% block title %}Quality Dashboard — Sentinel{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+  <h1 class="text-2xl font-bold">Quality Dashboard</h1>
+
+  {# ── Pipeline Health ───────────────────────────────────────────────────────── #}
+  <section class="bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
+    <h2 class="font-semibold text-lg mb-4">Pipeline Health</h2>
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+      <div class="text-center">
+        <div class="text-3xl font-bold text-gray-900">{{ total_sources }}</div>
+        <div class="text-xs text-gray-500 mt-1">Total Videos</div>
+      </div>
+      <div class="text-center">
+        <div class="text-3xl font-bold text-green-600">{{ status_counts.get("completed", 0) }}</div>
+        <div class="text-xs text-gray-500 mt-1">Completed</div>
+      </div>
+      <div class="text-center">
+        <div class="text-3xl font-bold text-blue-600">{{ status_counts.get("processing", 0) }}</div>
+        <div class="text-xs text-gray-500 mt-1">Processing</div>
+      </div>
+      <div class="text-center">
+        <div class="text-3xl font-bold text-red-600">{{ status_counts.get("failed", 0) }}</div>
+        <div class="text-xs text-gray-500 mt-1">Failed</div>
+      </div>
+    </div>
+  </section>
+
+  {# ── Feedback Overview ────────────────────────────────────────────────────── #}
+  <section class="bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
+    <h2 class="font-semibold text-lg mb-4">Feedback Overview</h2>
+    <div class="grid grid-cols-2 sm:grid-cols-3 gap-4">
+      <div class="text-center">
+        <div class="text-3xl font-bold text-green-600">{{ thumbs_up }}</div>
+        <div class="text-xs text-gray-500 mt-1">Classification 👍</div>
+      </div>
+      <div class="text-center">
+        <div class="text-3xl font-bold text-red-500">{{ thumbs_down }}</div>
+        <div class="text-xs text-gray-500 mt-1">Classification 👎</div>
+      </div>
+      <div class="text-center">
+        {% if avg_report_rating %}
+          <div class="text-3xl font-bold text-yellow-500">{{ avg_report_rating }}⭐</div>
+          <div class="text-xs text-gray-500 mt-1">Avg Report Rating (n={{ report_rating_count }})</div>
+        {% else %}
+          <div class="text-3xl font-bold text-gray-300">—</div>
+          <div class="text-xs text-gray-500 mt-1">Avg Report Rating</div>
+        {% endif %}
+      </div>
+    </div>
+    {% if thumbs_up + thumbs_down > 0 %}
+    <div class="mt-4 text-sm text-gray-500">
+      Classification accuracy signal: {{ thumbs_up }}/{{ thumbs_up + thumbs_down }} positive
+      ({{ "%.0f"|format(thumbs_up / (thumbs_up + thumbs_down) * 100) }}%)
+    </div>
+    {% endif %}
+  </section>
+
+  {# ── Active Prompt Versions ───────────────────────────────────────────────── #}
+  <section class="bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
+    <h2 class="font-semibold text-lg mb-4">Active Prompt Versions</h2>
+    {% if prompt_versions %}
+    <div class="overflow-x-auto">
+      <table class="w-full text-sm">
+        <thead>
+          <tr class="text-left text-xs font-semibold uppercase tracking-wide text-gray-500 border-b border-gray-100">
+            <th class="pb-2 pr-4">Prompt</th>
+            <th class="pb-2 pr-4">Hash</th>
+            <th class="pb-2">Activated</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-50">
+          {% for pv in prompt_versions %}
+          <tr class="py-2">
+            <td class="py-2 pr-4 font-mono text-xs text-indigo-700">{{ pv.prompt_name }}</td>
+            <td class="py-2 pr-4 font-mono text-xs text-gray-500">{{ pv.version_hash[:12] }}</td>
+            <td class="py-2 text-xs text-gray-500">
+              {% if pv.activated_at %}{{ pv.activated_at.strftime("%Y-%m-%d %H:%M") }}{% else %}—{% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <p class="text-sm text-gray-400 italic">No prompt versions recorded yet.</p>
+    {% endif %}
+  </section>
+
+</div>
+{% endblock %}

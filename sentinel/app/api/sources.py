@@ -61,6 +61,32 @@ async def list_sources(session: AsyncSession = Depends(get_session)) -> list[Sou
     return [SourceResponse.model_validate(s) for s in sources]
 
 
+@router.post("/sources/{source_id}/reprocess", response_model=SourceResponse, status_code=202)
+async def reprocess_source(
+    source_id: uuid.UUID,
+    response: Response,
+    session: AsyncSession = Depends(get_session),
+) -> SourceResponse:
+    """Re-enqueue the pipeline for a failed or completed source."""
+    result = await session.execute(select(Source).where(Source.id == source_id))
+    source = result.scalar_one_or_none()
+    if not source:
+        from fastapi import HTTPException
+        raise HTTPException(status_code=404, detail="Source not found")
+
+    source.processing_status = ProcessingStatus.pending
+    job = ProcessingJob(source_id=source.id, status="queued")
+    session.add(job)
+    await session.commit()
+
+    task_result = run_pipeline.delay(str(source.id))
+    job.celery_task_id = task_result.id
+    await session.commit()
+
+    response.headers["HX-Trigger"] = "refreshSources"
+    return SourceResponse.model_validate(source)
+
+
 @router.get("/sources/{source_id}/title-display", response_class=HTMLResponse)
 async def title_display(
     source_id: uuid.UUID,

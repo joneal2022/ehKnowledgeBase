@@ -10,11 +10,173 @@
 
 ## Current State
 
-**Phase:** Phase 1 — Group 2 (Core Services) in progress
+**Phase:** Phase 1 — Group 4 (LangGraph Pipeline) IN PROGRESS
 **Last Working Session:** 2026-03-03
 **Docker Status:** Docker Desktop installed and verified. DB starts with `docker compose up -d db` from `sentinel/`. sentinel_test DB exists and pgvector confirmed working.
-**Database:** Migration 0001 applied and verified against sentinel_test. All 11 tables confirmed. pgvector + tsvector columns passing integration tests.
-**Git Branch:** group/2-core-services
+**Database:** Migration 0001 applied and verified. All 11 tables confirmed.
+**Git Branch:** group/4-langgraph-pipeline
+**Tests passing:** 181 Tier A (all tasks through Task 11)
+
+### Group 4 — Tasks Completed So Far
+- [x] Task 9: PipelineState TypedDict + build_graph() shell (12 tests)
+- [x] Task 10: extract_node + preprocess_node (14 tests)
+- [x] Task 11: segment_node (9 tests)
+- [ ] Task 12: classify_node — NOT YET STARTED
+- [ ] Task 13: report_dev/ai/biz nodes — NOT YET STARTED
+- [ ] Task 14: synthesize_node — NOT YET STARTED
+- [ ] Task 15: persist_node + Celery worker + POST enqueue — NOT YET STARTED
+
+### Implementation Plan for Tasks 12-15 (for next session)
+
+**Key patterns already established (do not change):**
+- Nodes receive services via `config["configurable"]` dict: `session`, `llm_client`, `youtube_service`
+- `PromptManager(session)` used inside each node for prompt + version hash
+- `parse_llm_json()` for all LLM JSON output
+- `session.add(row)` is SYNC, `session.flush()` is ASYNC — mock accordingly in tests
+- All nodes return dict of state field updates (not full state)
+- Errors go in `errors: list[str]` (never raise — graceful degradation)
+- `prompt_versions: dict[str, str]` accumulates task→hash across nodes
+
+---
+
+**Task 12: classify_node**
+File: `app/pipeline/nodes/classify.py`
+Input state fields: `sections` (list of dicts from segment_node)
+Output state fields: `classified_sections`, `prompt_versions["classify"]`, `errors`
+
+Logic per section:
+1. Build prompt: `prompt_manager.get_active_prompt("classify")` → format with section content + `few_shot_examples=""`
+2. Call `llm_client.complete("classify", prompt)` → attempt `parse_llm_json(raw)`
+3. **Tier 1A** (Loop 1A): if parse fails → retry with `prompt_manager.get_strict_variant("classify")` → attempt parse again → if still fails → set domain="not_relevant", confidence=0.0, needs_review=True, continue
+4. **Tier 1B** (Loop 1B): if parsed confidence < 0.6 → call `llm_client.complete("classify_escalation", prompt)` → parse → if cloud result has higher confidence, use it; set `escalated_to_cloud=True`
+5. Update ContentSection row in DB: `session.execute(update(ContentSection).where(...).values(domain=..., confidence=..., reasoning=..., needs_review=..., escalated_to_cloud=...))`
+6. Append to classified_sections list
+
+Tests must cover:
+- Happy path: section gets domain/confidence/reasoning
+- Tier 1A: parse fail → strict retry → success
+- Tier 1A: parse fail → strict retry → also fails → not_relevant + needs_review=True
+- Tier 1B: confidence=0.4 → cloud escalation called; higher cloud confidence used
+- Tier 1B: confidence=0.4 → cloud returns lower confidence → local result kept
+- Multiple sections processed independently
+- prompt_versions["classify"] set
+- DB update called for each section
+
+---
+
+**Task 13: report_dev_node, report_ai_node, report_biz_node**
+Files: `app/pipeline/nodes/report_dev.py`, `report_ai.py`, `report_biz.py`
+
+Each node is nearly identical — parameterized by domain:
+- `report_dev_node`: domain filter = "dev_tooling", prompt = "report_dev", task = "report"
+- `report_ai_node`: domain filter = "ai_solutions", prompt = "report_ai", task = "report"
+- `report_biz_node`: domain filter = "business_dev", prompt = "report_biz", task = "report"
+
+Logic for each:
+1. Filter `state["classified_sections"]` for sections where domain == target_domain
+2. If no sections → return `{"reports": {}, "prompt_versions": {}, "errors": []}` (skip)
+3. Build sections_text = join section contents
+4. Get prompt from PromptManager (e.g., "report_dev") + version_hash
+5. Format prompt with `sections_text` + `few_shot_examples=""`
+6. Call `llm_client.complete("report", prompt)` → `parse_llm_json(raw)`
+7. model_used = `settings.get_model_for_task("report")` (NEVER hardcoded — TC-1)
+8. Store Report in DB: `Report(source_id=..., report_type=ReportType.domain_specific, domain=DomainEnum.<domain>, title=..., content=..., key_takeaways=..., action_items=..., relevance_score=..., model_used=model_used, prompt_version=version_hash)`
+9. Return `{"reports": {domain: report_dict}, "prompt_versions": {"report_<domain>": version_hash}, "errors": []}`
+
+Note: `reports` dict merges across nodes via LangGraph last-write — each node writes its own domain key.
+
+Tests must cover (per domain node):
+- No sections for domain → returns empty, skips LLM call
+- Sections present → LLM called with "report" task
+- BR-2: model_used and prompt_version are set on Report row
+- TC-1: model_used comes from settings.get_model_for_task("report"), not hardcoded
+- Report stored in DB (session.add called once)
+- Parse failure → error returned, no DB write
+
+---
+
+**Task 14: synthesize_node**
+File: `app/pipeline/nodes/synthesize.py`
+Input state: `reports` (dict), `original_title`
+Output: `synthesis` (dict), `prompt_versions["synthesize"]`, `errors`
+
+Logic:
+1. Build `domain_reports_text` from state["reports"] — for each domain, format title + summary
+2. Get prompt "synthesize" from PromptManager; format with `original_title`, `domain_reports_text`, `few_shot_examples=""`
+3. Call `llm_client.complete("synthesize", prompt)` → `parse_llm_json(raw)`
+4. Expected JSON: `{"title": "...", "tldr": "...", "dont_miss": "...", "domain_breakdown": {...}}`
+5. Update Source.title = synthesis["title"] in DB (NOT original_title — BR-1, DR-4)
+6. Return `{"synthesis": parsed_data, "prompt_versions": {"synthesize": version_hash}, "errors": []}`
+
+Tests must cover:
+- BR-1/DR-4: Source.title updated to generated title (NOT original_title)
+- synthesis dict has title, tldr, dont_miss, domain_breakdown keys
+- No reports → graceful empty synthesis (still runs with empty domain_reports_text)
+- prompt_versions["synthesize"] recorded
+- Parse failure → error, no DB update to title
+
+---
+
+**Task 15: persist_node + Celery worker + POST endpoint update**
+
+**persist_node** (`app/pipeline/nodes/persist.py`):
+1. Update Source.processing_status = ProcessingStatus.completed
+2. `await session.flush()`
+3. Return `{"errors": []}`
+(Errors accumulated in state["errors"] throughout pipeline — persist marks completion regardless)
+
+**Celery worker** (`app/workers/__init__.py`, `app/workers/tasks.py`):
+```python
+# app/workers/tasks.py
+import asyncio
+from celery import Celery
+from app.config import settings
+
+celery_app = Celery("sentinel", broker=settings.REDIS_URL, backend=settings.REDIS_URL)
+celery_app.conf.task_serializer = "json"
+
+@celery_app.task(name="run_pipeline", bind=True)
+def run_pipeline(self, source_id: str) -> dict:
+    return asyncio.run(_run_async(self.request.id, source_id))
+
+async def _run_async(celery_task_id: str, source_id: str) -> dict:
+    from app.database import async_session_factory
+    from app.pipeline.graph import get_compiled_graph
+    from app.services.llm_client import LLMClient
+    from app.services.youtube import YouTubeService
+    from app.models.source import Source
+    from sqlalchemy import select
+
+    graph = get_compiled_graph()
+    llm_client = LLMClient()
+    youtube_svc = YouTubeService()
+
+    async with async_session_factory() as session:
+        result = await session.execute(select(Source).where(Source.id == source_id))
+        source = result.scalar_one()
+        initial_state = {
+            "source_id": source_id, "url": source.url,
+            "transcript": "", "original_title": None, "author": None,
+            "preprocessed_transcript": "", "sections": [], "classified_sections": [],
+            "reports": {}, "synthesis": {}, "errors": [], "prompt_versions": {},
+        }
+        config = {"configurable": {"session": session, "llm_client": llm_client, "youtube_service": youtube_svc}}
+        final_state = await graph.ainvoke(initial_state, config=config)
+        await session.commit()
+        return {"status": "completed", "errors": final_state.get("errors", [])}
+```
+
+**Updated POST /api/sources/youtube** (`app/api/sources.py`):
+- After creating Source → create `ProcessingJob(source_id=source.id, status="queued")`
+- After commit → call `run_pipeline.delay(str(source.id))`
+- Update `job.celery_task_id = task_result.id; await session.commit()`
+
+Tests for Task 15:
+- persist_node sets Source.processing_status = completed
+- persist_node calls session.flush
+- run_pipeline task is registered on celery_app
+- POST /api/sources/youtube calls run_pipeline.delay (mock the import)
+- POST creates a ProcessingJob record
 
 ---
 

@@ -60,7 +60,7 @@
 #### Group 4: LangGraph Pipeline
 - [x] Task 9 — Pipeline state + graph shell (PipelineState TypedDict, graph with node stubs)
 - [x] Task 10 — Extract + preprocess nodes (YouTube → DB, local 7B cleanup)
-- [ ] Task 11 — Segment node (cloud model, JSON sections, stored to content_sections)
+- [x] Task 11 — Segment node (cloud model, JSON sections, stored to content_sections)
 - [ ] Task 12 — Classify node (local 7B + Tier 1 Loop 1A parse-retry + 1B cloud escalation)
 - [ ] Task 13 — Domain report nodes (report_dev, report_ai, report_biz — model_used + prompt_version stored)
 - [ ] Task 14 — Synthesize + title node (single cloud call, updates sources.title)

@@ -8,19 +8,50 @@
 
 ## Current Phase: Phase 1 — Core Pipeline (MVP)
 
-### Status: In Progress
+### Status: In Progress — Group 2: Core Services
 
-### Tasks
-
-#### Group 1: Infrastructure
-- [x] Task 1 — Docker Compose (5 services: app, worker, db, redis, ollama) + Dockerfile + .env.example + pyproject.toml
-- [x] Task 2 — Database models (11 tables) + Alembic migrations
+### Current Group
 
 #### Group 2: Core Services
-- [ ] Task 3 — YouTube extraction service (youtube-transcript-api, no API key)
-- [ ] Task 4 — LLM client abstraction (local/cloud routing, parse_llm_json)
-- [ ] Task 5 — Embedding service (singleton, 768d verification)
-- [ ] Task 6 — Prompt manager (versioning, few-shot injection) + base prompt files
+- [ ] Task 3 — YouTube extraction service
+  - `app/services/youtube.py`
+  - `YouTubeService.extract(url)` → returns `{transcript, original_title, author, published_at, url}`
+  - Uses `youtube-transcript-api` (no API key needed)
+  - Graceful error if captions unavailable
+  - Does NOT use generated title — stores original YouTube title as `original_title`
+
+- [ ] Task 4 — LLM client abstraction
+  - `app/services/llm_client.py`
+  - `LLMClient.complete(task, prompt, **kwargs)` — routes to local or cloud based on task
+  - Local: Ollama HTTP API (`OLLAMA_LOCAL_URL`)
+  - Cloud: Ollama Cloud API (`OLLAMA_CLOUD_URL` + `OLLAMA_CLOUD_API_KEY`)
+  - `parse_llm_json(text)` — strips markdown fences, parses JSON, raises `ValueError` on failure
+  - All calls use `get_model_for_task()` from config — no hardcoded model strings
+  - Timeouts: 30s classification, 120s reports
+
+- [ ] Task 5 — Embedding service
+  - `app/services/embedding.py`
+  - `EmbeddingService` singleton — `get_embedding_service()` factory
+  - `embed(text)` → `list[float]` (768d, nomic-embed-text)
+  - `embed_batch(texts)` → `list[list[float]]`
+  - Verifies 768d on startup or first call — raises if wrong dimension
+  - ALWAYS uses `settings.OLLAMA_MODEL_EMBED` — never any other model
+
+- [ ] Task 6 — Prompt manager + base prompt files
+  - `app/pipeline/prompts/manager.py`
+  - `PromptManager.get(prompt_name)` → rendered prompt string
+  - `PromptManager.render(prompt_name, few_shot_examples=None, **vars)` → filled template
+  - Prompt files: `preprocess.py`, `segment.py`, `classify.py`, `report_dev.py`, `report_ai.py`, `report_biz.py`, `synthesize.py`
+  - Each prompt has `{few_shot_examples}` placeholder
+  - SHA256 hash for version tracking → saves to `prompt_versions` table on first use
+
+### Blocked
+
+*(nothing)*
+
+---
+
+### Remaining Groups
 
 #### Group 3: Basic UI Shell
 - [ ] Task 7 — Base HTMX layout + nav (base.html, home page, FastAPI app wired up)
@@ -44,13 +75,15 @@
 - [ ] Task 19 — Observability (LangFuse tracing, trace_id in jobs, quality dashboard)
 - [ ] Task 20 — Polish + domain filter view (skeleton cards, retry button, mobile layout)
 
-### Blocked
-
-*(nothing)*
+---
 
 ### Completed
 
-*(nothing yet)*
+#### Group 1: Infrastructure ✅ (merged to main 2026-03-03)
+- [x] Task 1 — Docker Compose (5 services: app, worker, db, redis, ollama) + Dockerfile + .env.example + pyproject.toml
+- [x] Task 2 — Database models (11 tables) + Alembic migrations
+- [x] Tier A tests: 34 unit tests (models + config)
+- [x] Tier B tests: 16 integration tests (migration, CRUD, CASCADE, vector/tsvector)
 
 ---
 

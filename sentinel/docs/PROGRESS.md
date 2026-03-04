@@ -10,15 +10,33 @@
 
 ## Current State
 
-**Phase:** Phase 1 — Group 1 (Infrastructure) complete, tests passing
-**Last Working Session:** 2026-03-02
-**Docker Status:** Not yet started (docker compose up not run — services defined, not running)
-**Database:** Migration written (0001_initial_schema.py) — not yet applied (needs Docker up)
-**Git Branch:** group/1-infrastructure
+**Phase:** Phase 1 — Group 2 (Core Services) in progress
+**Last Working Session:** 2026-03-03
+**Docker Status:** Docker Desktop installed and verified. DB starts with `docker compose up -d db` from `sentinel/`. sentinel_test DB exists and pgvector confirmed working.
+**Database:** Migration 0001 applied and verified against sentinel_test. All 11 tables confirmed. pgvector + tsvector columns passing integration tests.
+**Git Branch:** group/2-core-services
 
 ---
 
 ## Session Log
+
+### 2026-03-03 — Group 1 Complete: Integration Tests + Merge to Main + Doc Reorganisation
+**What:** Added Tier B integration tests for Group 1 (16 tests). Updated pyproject.toml with pytest markers. Reorganised all docs from repo root into `sentinel/docs/` and `sentinel/tasks/`. Replaced CLAUDE.md §3.5 with testing-gate skill reference. Installed `testing-gate` skill globally (`~/.claude/commands/`). Merged `group/1-infrastructure` → `main`.
+**Files:**
+- `sentinel/tests/test_integration/conftest.py` — DB fixture (apply_migrations, db_session with rollback)
+- `sentinel/tests/test_integration/test_migration.py` — 5 tests: single head, all tables, pgvector ext, vector(768) type, tsvector column
+- `sentinel/tests/test_integration/test_db_models.py` — 11 tests: CRUD, 5 CASCADE deletes, 768d vector insert, tsvector auto-populate, keyword search, BR-2 metadata
+- `sentinel/pyproject.toml` — added `markers` + `addopts = "-m 'not integration'"` (Tier A excludes Tier B by default)
+- `sentinel/CLAUDE.md` — moved to sentinel/, §3.5 replaced, TEST_CONTEXT.md added to ref map
+- `sentinel/docs/` — ARCHITECTURE.md, CODE_PATTERNS.md, REQUIREMENTS.md, PROGRESS.md moved here
+- `sentinel/tasks/todo.md` — moved here
+- `sentinel/docs/TEST_CONTEXT.md` — created (Sentinel-specific testing context)
+- `~/.claude/commands/testing-gate.md` — universal testing skill installed
+- `~/.claude/references/TEST_CONTEXT_TEMPLATE.md` — reusable template installed
+**Status:** All tests passing — Tier A: 34 passed, Tier B: 16 passed. Merged to main.
+**Notes:** Tier B requires Docker DB running (`docker compose up -d db`). Integration test sessions use apply_migrations fixture (downgrade base → upgrade head) then rollback per test. `.env` file must exist (copy from `.env.example`) for docker compose to start.
+
+---
 
 ### 2026-03-02 — Test Retrofit + CLAUDE.md Testing Rules
 **What:** Retrofitted missing tests for Tasks 1 & 2 (per CLAUDE.md §3 "test before commit" rule that was skipped). Updated CLAUDE.md with explicit §3.5 Testing Requirements section defining two test tiers (unit vs integration) and per-task-type test expectations.

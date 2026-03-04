@@ -10,12 +10,17 @@
 
 ## Current State
 
-**Phase:** Phase 1 — Group 5 (Feedback System) COMPLETE — Awaiting Tier B + merge
+**Phase:** Phase 1 — Group 6 (Polish + Observability) COMPLETE — Awaiting Tier B + merge
 **Last Working Session:** 2026-03-03
 **Docker Status:** Docker Desktop installed and verified. DB starts with `docker compose up -d db` from `sentinel/`. sentinel_test DB exists and pgvector confirmed working.
 **Database:** Migration 0001 applied and verified. All 11 tables confirmed.
-**Git Branch:** group/5-feedback-system
-**Tests passing:** 245 Tier A (all tasks through Task 17)
+**Git Branch:** group/6-polish-observability
+**Tests passing:** 283 Tier A (all tasks through Task 20)
+
+### Group 6 — All Tasks Complete
+- [x] Task 18: Video detail page — inline title edit, domain tabs with `<details>`, report cards with star ratings + thumbs, classified sections (9 tests)
+- [x] Task 19: Observability — TracingService (LangFuse wrapper, graceful no-op when keys not set), trace_id stored in ProcessingJob.metadata, GET /quality dashboard (17 tests)
+- [x] Task 20: Polish — GET /domain/{domain} filter view, POST /api/sources/{id}/reprocess (retry), skeleton card loading, retry button on failed cards, mobile-responsive nav (12 tests)
 
 ### Group 4 — All Tasks Complete
 - [x] Task 9: PipelineState TypedDict + build_graph() shell (12 tests)
@@ -183,6 +188,31 @@ Tests for Task 15:
 ---
 
 ## Session Log
+
+### 2026-03-03 — Tasks 18–20 Complete: Polish + Observability (Group 6)
+**What:** Video detail page, LangFuse observability, domain filter, retry button, skeleton loading, mobile nav.
+**Files:**
+- `app/pages/videos.py` — GET /videos/{source_id}: source, reports, sections; 404 on invalid UUID/missing
+- `app/templates/pages/video_detail.html` — inline title edit, processing banner, exec summary, domain `<details>` tabs, classified sections + feedback widgets
+- `app/templates/components/report_card.html` — report title/content/key takeaways/action items/star rating
+- `app/services/tracing.py` — TracingService: LangFuse wrapper; all methods no-op when keys not set; graceful on init failure
+- `app/workers/tasks.py` — tracing integrated: start_trace → trace_id stored in ProcessingJob.metadata via UPDATE
+- `app/pages/quality.py` — GET /quality: pipeline health stats, classification thumbs, avg report rating, active prompt versions
+- `app/templates/pages/quality.html` — Pipeline Health + Feedback Overview + Active Prompt Versions table
+- `app/pages/domain_view.py` — GET /domain/{domain}: filter sources by classified domain; 404 for invalid/not_relevant
+- `app/templates/pages/domain_view.html` — filtered source list with empty state
+- `app/api/sources.py` — POST /api/sources/{id}/reprocess: re-enqueue failed sources; 404 if missing
+- `app/templates/components/skeleton_card.html` — animated loading skeleton (htmx-indicator)
+- `app/templates/components/video_card.html` — retry button for failed sources
+- `app/templates/components/nav.html` — domain shortcuts + flex-wrap for mobile
+- Tests: 9 (video detail) + 17 (tracing + quality) + 12 (domain view + reprocess) = 38 new tests
+**Status:** 283 Tier A tests passing. Awaiting Tier B + merge.
+**Notes:**
+- TracingService uses lazy `from langfuse import Langfuse` inside __init__ to avoid import errors when langfuse package has issues
+- Domain filter view uses SQL EXISTS subquery to find sources with classified sections in the requested domain
+- Reprocess endpoint mirrors the POST /youtube flow (creates ProcessingJob + enqueues Celery task)
+
+---
 
 ### 2026-03-03 — Tasks 16–17 Complete: Feedback System
 **What:** Full Tier 2 feedback loop: corrections accumulate in few_shot_bank → auto-rebuild prompts. Inline title editing, thumbs widgets, star ratings all wired.

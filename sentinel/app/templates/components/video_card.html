@@ -19,4 +19,15 @@
   {% if source.author %}
     <p class="text-xs text-gray-500 mt-2">{{ source.author }}</p>
   {% endif %}
+
+  {% set status = source.processing_status.value if source.processing_status else "pending" %}
+  {% if status == "failed" %}
+    <button
+      hx-post="/api/sources/{{ source.id }}/reprocess"
+      hx-swap="none"
+      class="mt-3 text-xs text-indigo-600 hover:text-indigo-800 font-medium"
+      title="Re-run the pipeline for this video">
+      ↺ Retry
+    </button>
+  {% endif %}
 </div>

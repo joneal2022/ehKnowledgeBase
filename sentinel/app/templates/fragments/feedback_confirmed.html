@@ -1,0 +1,10 @@
+{# Fragment returned after feedback is submitted — replaces feedback widget #}
+{# Params: target_type, target_id, correction_applied #}
+<div id="feedback-{{ target_type }}-{{ target_id }}"
+     class="flex items-center gap-1 mt-1 text-sm text-gray-400">
+  {% if correction_applied %}
+    <span class="text-green-600 text-xs">✓ Correction saved — thank you!</span>
+  {% else %}
+    <span class="text-xs">✓ Feedback recorded</span>
+  {% endif %}
+</div>

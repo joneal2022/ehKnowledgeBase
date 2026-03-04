@@ -1,0 +1,14 @@
+{# Star rating widget for reports — 1-5 stars #}
+{# Params: target_id (report.id) #}
+<div id="feedback-report-{{ target_id }}" class="flex items-center gap-1 mt-2">
+  <span class="text-xs text-gray-400 mr-1">Rate:</span>
+  {% for star in [1, 2, 3, 4, 5] %}
+  <button
+    hx-post="/api/feedback"
+    hx-vals='{"target_type": "report", "target_id": "{{ target_id }}", "rating": {{ star }}}'
+    hx-target="#feedback-report-{{ target_id }}"
+    hx-swap="outerHTML"
+    class="text-lg text-gray-300 hover:text-yellow-400 transition-colors"
+    title="{{ star }} star{% if star > 1 %}s{% endif %}">⭐</button>
+  {% endfor %}
+</div>

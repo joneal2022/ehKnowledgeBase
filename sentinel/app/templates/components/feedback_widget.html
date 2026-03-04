@@ -1,0 +1,38 @@
+{# Thumbs up/down feedback widget for classifications #}
+{# Params: target_type, target_id, domain (optional, for correction dropdown) #}
+<div id="feedback-{{ target_type }}-{{ target_id }}" class="flex items-center gap-2 mt-1">
+  <button
+    hx-post="/api/feedback"
+    hx-vals='{"target_type": "{{ target_type }}", "target_id": "{{ target_id }}", "rating": 1}'
+    hx-target="#feedback-{{ target_type }}-{{ target_id }}"
+    hx-swap="outerHTML"
+    class="p-1 rounded hover:bg-green-100 text-gray-400 hover:text-green-600 transition-colors"
+    title="Looks right">👍</button>
+
+  <button
+    id="thumbsdown-{{ target_id }}"
+    hx-post="/api/feedback"
+    hx-vals='{"target_type": "{{ target_type }}", "target_id": "{{ target_id }}", "rating": 0}'
+    hx-target="#feedback-{{ target_type }}-{{ target_id }}"
+    hx-swap="outerHTML"
+    hx-include="#correction-{{ target_id }}"
+    class="p-1 rounded hover:bg-red-100 text-gray-400 hover:text-red-600 transition-colors"
+    title="Wrong classification"
+    onclick="document.getElementById('correction-select-{{ target_id }}').classList.remove('hidden')">👎</button>
+
+  <select
+    id="correction-select-{{ target_id }}"
+    name="correction[correct_domain]"
+    class="hidden text-sm border border-gray-200 rounded px-2 py-0.5 bg-white"
+    hx-post="/api/feedback"
+    hx-target="#feedback-{{ target_type }}-{{ target_id }}"
+    hx-swap="outerHTML"
+    hx-vals='{"target_type": "{{ target_type }}", "target_id": "{{ target_id }}", "rating": 0}'
+    onchange="this.form && this.form.submit()">
+    <option value="">Correct domain…</option>
+    <option value="dev_tooling">Dev Tooling</option>
+    <option value="ai_solutions">AI Solutions</option>
+    <option value="business_dev">Business Dev</option>
+    <option value="not_relevant">Not Relevant</option>
+  </select>
+</div>

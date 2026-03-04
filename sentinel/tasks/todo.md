@@ -8,7 +8,7 @@
 
 ## Current Phase: Phase 1 — Core Pipeline (MVP)
 
-### Status: In Progress — Group 4 complete, awaiting Tier B + merge. Group 5 next.
+### Status: Group 5 complete, awaiting Tier B + merge. Group 6 (Polish + Observability) is next.
 
 ### Current Group
 
@@ -66,9 +66,9 @@
 - [x] Task 14 — Synthesize + title node (single cloud call, updates sources.title)
 - [x] Task 15 — Persist results + background worker (Celery task, POST enqueues job)
 
-#### Group 5: Feedback System
-- [ ] Task 16 — Feedback widgets + API (thumbs/stars, correction dropdown, inline title edit)
-- [ ] Task 17 — Prompt evolution service (Tier 2: few-shot accumulation → prompt rebuild)
+#### Group 5: Feedback System ✅ (245 Tier A tests — awaiting Tier B + merge)
+- [x] Task 16 — Feedback widgets + API (thumbs/stars, correction dropdown, inline title edit)
+- [x] Task 17 — Prompt evolution service (Tier 2: few-shot accumulation → prompt rebuild)
 
 #### Group 6: Polish + Observability
 - [ ] Task 18 — Video detail page (domain tabs, report cards, feedback widgets)

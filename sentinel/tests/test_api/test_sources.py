@@ -1,7 +1,7 @@
 """Unit tests for sources API — Task 8."""
 import uuid
 from datetime import datetime, timezone
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from fastapi.testclient import TestClient
@@ -10,6 +10,13 @@ from app.database import get_session
 from app.main import app
 from app.models.source import ProcessingStatus, Source, SourceType
 from app.schemas.source import YouTubeSubmitRequest
+
+
+def _mock_run_pipeline():
+    """Return a MagicMock for run_pipeline.delay to avoid Redis connections."""
+    mock = MagicMock()
+    mock.delay.return_value = MagicMock(id="mock-celery-task-id")
+    return mock
 
 
 def _make_source(**kwargs) -> Source:
@@ -123,11 +130,12 @@ class TestSubmitYouTubeUrl:
         source = _make_source()
         app.dependency_overrides[get_session] = _override_with_source(source)
         try:
-            with TestClient(app) as client:
-                response = client.post(
-                    "/api/sources/youtube",
-                    json={"url": "https://www.youtube.com/watch?v=abc123"},
-                )
+            with patch("app.api.sources.run_pipeline", _mock_run_pipeline()):
+                with TestClient(app) as client:
+                    response = client.post(
+                        "/api/sources/youtube",
+                        json={"url": "https://www.youtube.com/watch?v=abc123"},
+                    )
             assert response.status_code == 202
         finally:
             app.dependency_overrides.clear()
@@ -136,11 +144,12 @@ class TestSubmitYouTubeUrl:
         source = _make_source()
         app.dependency_overrides[get_session] = _override_with_source(source)
         try:
-            with TestClient(app) as client:
-                response = client.post(
-                    "/api/sources/youtube",
-                    json={"url": "https://www.youtube.com/watch?v=abc123"},
-                )
+            with patch("app.api.sources.run_pipeline", _mock_run_pipeline()):
+                with TestClient(app) as client:
+                    response = client.post(
+                        "/api/sources/youtube",
+                        json={"url": "https://www.youtube.com/watch?v=abc123"},
+                    )
             data = response.json()
             assert "id" in data
         finally:
@@ -150,11 +159,12 @@ class TestSubmitYouTubeUrl:
         source = _make_source()
         app.dependency_overrides[get_session] = _override_with_source(source)
         try:
-            with TestClient(app) as client:
-                response = client.post(
-                    "/api/sources/youtube",
-                    json={"url": "https://www.youtube.com/watch?v=abc123"},
-                )
+            with patch("app.api.sources.run_pipeline", _mock_run_pipeline()):
+                with TestClient(app) as client:
+                    response = client.post(
+                        "/api/sources/youtube",
+                        json={"url": "https://www.youtube.com/watch?v=abc123"},
+                    )
             data = response.json()
             assert data["processing_status"] == "pending"
         finally:
@@ -164,11 +174,12 @@ class TestSubmitYouTubeUrl:
         source = _make_source()
         app.dependency_overrides[get_session] = _override_with_source(source)
         try:
-            with TestClient(app) as client:
-                response = client.post(
-                    "/api/sources/youtube",
-                    json={"url": "https://www.youtube.com/watch?v=abc123"},
-                )
+            with patch("app.api.sources.run_pipeline", _mock_run_pipeline()):
+                with TestClient(app) as client:
+                    response = client.post(
+                        "/api/sources/youtube",
+                        json={"url": "https://www.youtube.com/watch?v=abc123"},
+                    )
             assert response.headers.get("hx-trigger") == "refreshSources"
         finally:
             app.dependency_overrides.clear()

@@ -37,7 +37,7 @@
   - Verifies 768d on startup or first call — raises if wrong dimension
   - ALWAYS uses `settings.OLLAMA_MODEL_EMBED` — never any other model
 
-- [ ] Task 6 — Prompt manager + base prompt files
+- [x] Task 6 — Prompt manager + base prompt files
   - `app/pipeline/prompts/manager.py`
   - `PromptManager.get(prompt_name)` → rendered prompt string
   - `PromptManager.render(prompt_name, few_shot_examples=None, **vars)` → filled template

@@ -20,6 +20,28 @@
 
 ## Session Log
 
+### 2026-03-03 — Task 6 Complete: Prompt Manager + Base Prompt Files
+**What:** Implemented `PromptManager` with SHA256 versioning and first-use DB persistence. Created 7 prompt template files for all pipeline nodes.
+**Files:**
+- `app/pipeline/prompts/__init__.py` — package init
+- `app/pipeline/prompts/manager.py` — `PromptManager(session)`: `get_active_prompt()`, `get_prompt_version_hash()`, `get_strict_variant()`, `_save_base_prompt()`, `_load_base_prompt()`, `STRICT_SUFFIX`, `KNOWN_PROMPTS`
+- `app/pipeline/prompts/preprocess.py` — caption cleanup prompt
+- `app/pipeline/prompts/segment.py` — topical section splitting prompt (JSON array output)
+- `app/pipeline/prompts/classify.py` — domain classification prompt (matches CODE_PATTERNS.md example)
+- `app/pipeline/prompts/report_dev.py` — Dev/Tooling report prompt with business context
+- `app/pipeline/prompts/report_ai.py` — AI Solutions report prompt with business context
+- `app/pipeline/prompts/report_biz.py` — Business Dev report prompt with business context
+- `app/pipeline/prompts/synthesize.py` — Executive summary + title generation (matches CODE_PATTERNS.md)
+- `tests/test_pipeline/test_prompt_manager.py` — 38 tests: TC-5 all 7 files have `{few_shot_examples}`, DB-hit/miss behaviour, first-use save, SHA256 hash, strict variant, import error
+**Status:** Working — 127 Tier A tests passing
+**Notes:**
+- `get_active_prompt()` on first use saves base template to `prompt_versions` and returns it; second call finds it in DB
+- `get_prompt_version_hash()` returns `"base"` before any DB version exists
+- All report prompts include `BUSINESS_CONTEXT` preamble (15-dev shop, Louisiana, Dallas/Houston)
+- All 7 prompt files verified to have `{few_shot_examples}` placeholder (TC-5)
+
+---
+
 ### 2026-03-03 — Tasks 3–5 Complete: YouTube Service, LLM Client, Embedding Service
 **What:** Implemented three core services for Group 2. Each followed testing-gate protocol (write → test → commit).
 **Files:**

@@ -8,6 +8,7 @@ from fastapi.staticfiles import StaticFiles
 from app.api import feedback as feedback_api
 from app.api import sources as sources_api
 from app.pages import dashboard
+from app.pages import videos
 
 
 @asynccontextmanager
@@ -24,5 +25,6 @@ app.mount("/static", StaticFiles(directory=_static_dir), name="static")
 
 # Routers
 app.include_router(dashboard.router)
+app.include_router(videos.router)
 app.include_router(sources_api.router, prefix="/api")
 app.include_router(feedback_api.router, prefix="/api")

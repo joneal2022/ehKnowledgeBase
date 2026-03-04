@@ -2,7 +2,9 @@
   <div class="flex items-start justify-between gap-4">
     <div class="flex-1 min-w-0">
       <h3 class="font-semibold text-base truncate">
-        {{ source.title or source.original_title or "Processing…" }}
+        <a href="/videos/{{ source.id }}" class="hover:text-indigo-600">
+          {{ source.title or source.original_title or "Processing…" }}
+        </a>
       </h3>
       {% if source.url %}
         <a href="{{ source.url }}" target="_blank" rel="noopener"

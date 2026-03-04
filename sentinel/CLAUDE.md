@@ -74,57 +74,29 @@
 
 **"Test it" is not optional.** Before every commit, the relevant tests must pass.
 
-### Two Test Tiers
+### Protocol
+Use the `testing-gate` skill for ALL testing decisions. It defines:
+- How to derive tests from code (business logic, edge cases, contracts, errors, regressions)
+- The pre-commit gate sequence (identify → derive → write → run → verify → commit)
+- Test quality rules and mocking strategy
+- Language-specific patterns
 
-| Tier | When | How to run | Required for |
-|------|------|-----------|-------------|
-| **A — Unit tests** | No Docker needed | `uv run pytest tests/ -v` | Every commit |
-| **B — Integration tests** | Docker running | `uv run pytest tests/ -v -m integration` | Every group merge to `main` |
+### Project-Specific Context
+All project-specific testing details live in `docs/TEST_CONTEXT.md`:
+- Business requirements to test
+- Technical constraints to enforce
+- Test tiers and commands
+- Task-to-test mapping
+- Fixtures and test data
+- Known gotchas
 
-### What to Test Per Task Type
-
-| Task type | Unit tests (Tier A) | Integration tests (Tier B) |
-|-----------|--------------------|-----------------------------|
-| **Config / env** | `get_model_for_task()`, defaults, env var overrides | — |
-| **DB models** | Enum values, column names, nullability, FK definitions | CRUD, CASCADE delete, tsvector/vector columns |
-| **Services** | Mock LLM/DB — test routing logic, output parsing | Real Ollama/DB calls |
-| **Pipeline nodes** | Mock all services — test state transitions | Real pipeline run on sample transcript |
-| **API endpoints** | `TestClient` with mock DB | Real DB + full request cycle |
-| **Migration** | `alembic heads` parses cleanly | `alembic upgrade head` + psql table list |
-
-### Minimum Coverage Per Task
-
-- **Task 1 (Infrastructure):** Test `config.py` settings + `get_model_for_task()` routing
-- **Task 2 (DB Models):** Test all enum values, all critical columns (`model_used`, `prompt_version`, `original_title`), model instantiation
-- **Task 3+ (Services):** Test each public function with mocked dependencies
-- **Task 9+ (Pipeline):** Test each node function with mocked LLM client and mocked DB session
-
-### Test File Locations
-
-```
-tests/
-├── conftest.py                   # shared fixtures (settings, async session)
-├── test_services/
-│   ├── test_config.py            # Task 1: config unit tests
-│   ├── test_llm_client.py        # Task 4
-│   ├── test_embedding_service.py # Task 5
-│   └── test_prompt_manager.py    # Task 6
-├── test_models/
-│   └── test_models.py            # Task 2: model unit tests
-├── test_pipeline/
-│   ├── test_classify.py          # Task 12: Tier 1 loops
-│   └── test_prompt_evolution.py  # Task 17: Tier 2 loops
-├── test_api/
-│   └── test_feedback.py          # Task 16
-└── fixtures/
-    └── sample_transcript.txt     # short fake transcript for pipeline tests
-```
+**If `docs/TEST_CONTEXT.md` doesn't exist, create one before writing tests.**
 
 ### Rules
 - **Never commit with failing tests.**
-- Mark integration tests: `@pytest.mark.integration` — they are skipped by default locally.
-- Don't write tests after the fact; write them as part of completing the task.
-- A task is NOT done until its Tier A tests pass.
+- **A task is NOT done until its Tier A tests pass.**
+- **Write tests AS PART of the task, not after.**
+- Mark integration tests: `@pytest.mark.integration` — skipped by default locally.
 
 ---
 
@@ -251,6 +223,7 @@ git push
 | What's been done | `docs/PROGRESS.md` |
 | What's being worked on now | `tasks/todo.md` |
 | Environment variables | `.env.example` |
+| Project-specific test context | `docs/TEST_CONTEXT.md` |
 
 ---
 

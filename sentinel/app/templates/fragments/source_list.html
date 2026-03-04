@@ -1,0 +1,12 @@
+{% if sources %}
+  <div class="space-y-4">
+    {% for source in sources %}
+      {% include "components/video_card.html" %}
+    {% endfor %}
+  </div>
+{% else %}
+  <div class="text-center py-16 text-gray-400">
+    <p class="text-lg font-medium">No videos yet</p>
+    <p class="text-sm mt-1">Paste a YouTube URL above to get started.</p>
+  </div>
+{% endif %}

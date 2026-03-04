@@ -10,12 +10,12 @@
 
 ## Current State
 
-**Phase:** Phase 1 — Group 4 (LangGraph Pipeline) COMPLETE — Awaiting Tier B + merge
+**Phase:** Phase 1 — Group 5 (Feedback System) COMPLETE — Awaiting Tier B + merge
 **Last Working Session:** 2026-03-03
 **Docker Status:** Docker Desktop installed and verified. DB starts with `docker compose up -d db` from `sentinel/`. sentinel_test DB exists and pgvector confirmed working.
 **Database:** Migration 0001 applied and verified. All 11 tables confirmed.
-**Git Branch:** group/4-langgraph-pipeline
-**Tests passing:** 224 Tier A (all tasks through Task 15)
+**Git Branch:** group/5-feedback-system
+**Tests passing:** 245 Tier A (all tasks through Task 17)
 
 ### Group 4 — All Tasks Complete
 - [x] Task 9: PipelineState TypedDict + build_graph() shell (12 tests)
@@ -183,6 +183,23 @@ Tests for Task 15:
 ---
 
 ## Session Log
+
+### 2026-03-03 — Tasks 16–17 Complete: Feedback System
+**What:** Full Tier 2 feedback loop: corrections accumulate in few_shot_bank → auto-rebuild prompts. Inline title editing, thumbs widgets, star ratings all wired.
+**Files:**
+- `app/services/prompt_evolution.py` — PromptEvolutionService: classification corrections → few_shot_bank → rebuild at REBUILD_THRESHOLD=5; title corrections; report ratings
+- `app/api/feedback.py` — POST /api/feedback (classifications + reports); PATCH /api/sources/{id}/title (Loop 2D)
+- `app/api/sources.py` — added GET /api/sources/{id}/title-edit and title-display HTMX routes
+- `app/schemas/feedback.py` — FeedbackRequest, TitlePatchRequest
+- Templates: feedback_widget.html, star_rating.html, inline_title_display.html, inline_title_edit.html, feedback_confirmed.html
+- Tests: 11 (prompt evolution) + 10 (feedback API) = 21 new tests
+**Status:** 245 Tier A tests passing. Awaiting Tier B + merge.
+**Notes:**
+- PromptEvolutionService._rebuild_prompt: deactivates old PromptVersion, saves new one with few_shot_examples injected into {few_shot_examples} placeholder
+- Correction dropdown in feedback_widget.html uses vanilla JS onclick (only approved JS exception per CLAUDE.md §8)
+- TemplateResponse deprecation warning present (Starlette API change) — does not affect functionality, cosmetic fix for a future cleanup
+
+---
 
 ### 2026-03-03 — Tasks 12–15 Complete: Full LangGraph Pipeline Implemented
 **What:** Implemented all remaining Group 4 pipeline nodes. Full pipeline is now wired end-to-end.

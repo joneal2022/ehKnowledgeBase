@@ -10,23 +10,25 @@
 
 ## Current State
 
-**Phase:** Phase 1 — Group 4 (LangGraph Pipeline) IN PROGRESS
+**Phase:** Phase 1 — Group 4 (LangGraph Pipeline) COMPLETE — Awaiting Tier B + merge
 **Last Working Session:** 2026-03-03
 **Docker Status:** Docker Desktop installed and verified. DB starts with `docker compose up -d db` from `sentinel/`. sentinel_test DB exists and pgvector confirmed working.
 **Database:** Migration 0001 applied and verified. All 11 tables confirmed.
 **Git Branch:** group/4-langgraph-pipeline
-**Tests passing:** 181 Tier A (all tasks through Task 11)
+**Tests passing:** 224 Tier A (all tasks through Task 15)
 
-### Group 4 — Tasks Completed So Far
+### Group 4 — All Tasks Complete
 - [x] Task 9: PipelineState TypedDict + build_graph() shell (12 tests)
 - [x] Task 10: extract_node + preprocess_node (14 tests)
 - [x] Task 11: segment_node (9 tests)
-- [ ] Task 12: classify_node — NOT YET STARTED
-- [ ] Task 13: report_dev/ai/biz nodes — NOT YET STARTED
-- [ ] Task 14: synthesize_node — NOT YET STARTED
-- [ ] Task 15: persist_node + Celery worker + POST enqueue — NOT YET STARTED
+- [x] Task 12: classify_node — Tier 1A + Tier 1B (10 tests)
+- [x] Task 13: report_dev/ai/biz nodes — BR-2, TC-1 (12 tests)
+- [x] Task 14: synthesize_node — BR-1, DR-4 (6 tests)
+- [x] Task 15: persist_node + Celery worker + POST enqueue (6 tests)
 
-### Implementation Plan for Tasks 12-15 (for next session)
+**Next step:** Run Tier B integration tests (`docker compose up -d && uv run pytest tests/test_integration/ -v -m integration`), then merge group/4-langgraph-pipeline → main.
+
+### ~~Implementation Plan for Tasks 12-15~~ (COMPLETED 2026-03-03)
 
 **Key patterns already established (do not change):**
 - Nodes receive services via `config["configurable"]` dict: `session`, `llm_client`, `youtube_service`
@@ -181,6 +183,27 @@ Tests for Task 15:
 ---
 
 ## Session Log
+
+### 2026-03-03 — Tasks 12–15 Complete: Full LangGraph Pipeline Implemented
+**What:** Implemented all remaining Group 4 pipeline nodes. Full pipeline is now wired end-to-end.
+**Files:**
+- `app/pipeline/nodes/classify.py` — classify_node: Tier 1A (parse-fail → strict retry) + Tier 1B (low confidence → cloud escalation); DB UPDATE per section
+- `app/pipeline/nodes/_report_base.py` — shared `generate_domain_report()` helper
+- `app/pipeline/nodes/report_dev.py`, `report_ai.py`, `report_biz.py` — domain report nodes; BR-2 (model_used + prompt_version stored); TC-1 (model from settings)
+- `app/pipeline/nodes/synthesize.py` — executive summary + generated title; updates Source.title via DB UPDATE (BR-1, DR-4)
+- `app/pipeline/nodes/persist.py` — marks Source.processing_status=completed
+- `app/workers/__init__.py`, `app/workers/tasks.py` — Celery app + `run_pipeline` task (asyncio.run wrapper)
+- `app/api/sources.py` — POST endpoint updated: creates ProcessingJob, enqueues run_pipeline.delay()
+- Tests: 43 new tests across tasks 12-15 (10 + 12 + 6 + 3 + 6 + 6 = 43 total)
+**Status:** 224 Tier A tests passing. Awaiting Tier B + merge.
+**Notes:**
+- Tier 1A: first local call → parse_llm_json fails → retry with strict_variant prompt → if still fails → not_relevant + needs_review=True
+- Tier 1B: parsed confidence < 0.6 → classify_escalation (cloud) → if cloud higher confidence, use cloud result + escalated_to_cloud=True
+- _report_base.py shared helper avoids duplication across 3 nearly-identical nodes
+- run_pipeline import moved to top of sources.py (not lazy) for proper test patching
+- Existing test_sources.py POST tests updated to mock run_pipeline.delay (avoids Redis connection)
+
+---
 
 ### 2026-03-03 — Tasks 7–8 Complete: HTMX UI Shell + Add Video Form
 **What:** Wired up FastAPI app, base layout, and the Add Video → dashboard feed flow.

@@ -58,7 +58,7 @@
 - [x] Task 8 — Add Video form + dashboard feed (URL input, POST endpoint, status polling)
 
 #### Group 4: LangGraph Pipeline
-- [ ] Task 9 — Pipeline state + graph shell (PipelineState TypedDict, graph with node stubs)
+- [x] Task 9 — Pipeline state + graph shell (PipelineState TypedDict, graph with node stubs)
 - [ ] Task 10 — Extract + preprocess nodes (YouTube → DB, local 7B cleanup)
 - [ ] Task 11 — Segment node (cloud model, JSON sections, stored to content_sections)
 - [ ] Task 12 — Classify node (local 7B + Tier 1 Loop 1A parse-retry + 1B cloud escalation)

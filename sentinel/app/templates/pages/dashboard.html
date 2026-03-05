@@ -30,7 +30,7 @@
 <section class="mb-8">
   <h2 class="text-xl font-semibold mb-2">Download Transcript</h2>
   <p class="text-sm text-gray-500 mb-3">Paste a URL to download a .txt transcript for use with Claude.</p>
-  <form method="POST" action="/api/transcript/download" class="flex gap-3">
+  <form id="transcript-form" class="flex gap-3">
     <input type="url"
            name="url"
            placeholder="https://www.youtube.com/watch?v=..."
@@ -41,6 +41,38 @@
       Download
     </button>
   </form>
+  <div id="transcript-error" class="mt-2 text-sm text-red-600 hidden"></div>
+  <script>
+    document.getElementById('transcript-form').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      const url = this.elements['url'].value;
+      const err = document.getElementById('transcript-error');
+      err.classList.add('hidden');
+      try {
+        const resp = await fetch('/api/transcript/download', {
+          method: 'POST',
+          body: new URLSearchParams({url}),
+        });
+        if (!resp.ok) {
+          const data = await resp.json();
+          err.textContent = data.detail || 'Failed to fetch transcript.';
+          err.classList.remove('hidden');
+          return;
+        }
+        const filename = (resp.headers.get('Content-Disposition') || '').match(/filename="(.+?)"/)?.[1] || 'transcript.txt';
+        const blob = await resp.blob();
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = filename;
+        a.click();
+        URL.revokeObjectURL(a.href);
+        this.reset();
+      } catch (ex) {
+        err.textContent = 'Network error — is the server running?';
+        err.classList.remove('hidden');
+      }
+    });
+  </script>
 </section>
 
 <!-- Source list -->

@@ -1,4 +1,6 @@
 """Transcript API — direct transcript download as a .txt file."""
+import re
+
 from fastapi import APIRouter, Form, HTTPException
 from fastapi.responses import Response
 
@@ -27,7 +29,12 @@ async def download_transcript(url: str = Form(...)) -> Response:
         "\n---\n\n"
         f"{result.transcript}"
     )
-    filename = f"transcript_{result.video_id}.txt"
+    if result.original_title:
+        slug = re.sub(r"[^\w\s-]", "", result.original_title)
+        slug = re.sub(r"[\s]+", "_", slug).strip("_")[:80]
+        filename = f"{slug}.txt"
+    else:
+        filename = f"transcript_{result.video_id}.txt"
     return Response(
         content=content,
         media_type="text/plain",

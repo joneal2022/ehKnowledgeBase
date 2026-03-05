@@ -8,6 +8,7 @@
 <section class="mb-8">
   <h1 class="text-2xl font-bold mb-4">Add Video</h1>
   <form hx-post="/api/sources/youtube"
+        hx-ext="json-enc"
         hx-target="#add-result"
         hx-swap="innerHTML"
         hx-on::after-request="if(event.detail.successful) { this.reset(); htmx.trigger('#source-list', 'refreshSources') }"
@@ -23,6 +24,23 @@
     </button>
   </form>
   <div id="add-result" class="mt-2 text-sm"></div>
+</section>
+
+<!-- Download Transcript -->
+<section class="mb-8">
+  <h2 class="text-xl font-semibold mb-2">Download Transcript</h2>
+  <p class="text-sm text-gray-500 mb-3">Paste a URL to download a .txt transcript for use with Claude.</p>
+  <form method="POST" action="/api/transcript/download" class="flex gap-3">
+    <input type="url"
+           name="url"
+           placeholder="https://www.youtube.com/watch?v=..."
+           required
+           class="flex-1 border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+    <button type="submit"
+            class="bg-gray-700 text-white px-5 py-2 rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors">
+      Download
+    </button>
+  </form>
 </section>
 
 <!-- Source list -->

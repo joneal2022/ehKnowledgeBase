@@ -7,6 +7,7 @@ from fastapi.staticfiles import StaticFiles
 
 from app.api import feedback as feedback_api
 from app.api import sources as sources_api
+from app.api import transcript as transcript_api
 from app.pages import dashboard
 from app.pages import domain_view
 from app.pages import quality
@@ -32,3 +33,4 @@ app.include_router(quality.router)
 app.include_router(domain_view.router)
 app.include_router(sources_api.router, prefix="/api")
 app.include_router(feedback_api.router, prefix="/api")
+app.include_router(transcript_api.router, prefix="/api")

@@ -42,7 +42,7 @@ class TestExtractVideoId:
 # ── transcript fetching ────────────────────────────────────────────────────────
 
 class TestFetchTranscript:
-    async def test_joins_transcript_entries_with_spaces(self, svc):
+    async def test_returns_snippet_list(self, svc):
         from youtube_transcript_api import FetchedTranscriptSnippet
         snippets = [
             FetchedTranscriptSnippet("Hello world", 0.0, 1.5),
@@ -51,7 +51,9 @@ class TestFetchTranscript:
         ]
         with patch("app.services.youtube.YouTubeTranscriptApi.fetch", return_value=snippets):
             result = await svc._fetch_transcript("test_id")
-        assert result == "Hello world this is a test transcript."
+        assert result == snippets
+        assert result[0].text == "Hello world"
+        assert result[0].start == 0.0
 
     async def test_transcripts_disabled_raises_transcript_unavailable(self, svc):
         from youtube_transcript_api import TranscriptsDisabled
@@ -115,6 +117,8 @@ class TestExtract:
         assert result.video_id == "dQw4w9WgXcQ"
         assert result.transcript == "LangGraph is great for agents."
         assert result.author == "Ed Honour"
+        assert len(result.snippets) == 1
+        assert result.snippets[0].start == 0.0
 
     async def test_original_title_is_raw_youtube_title_not_generated(self, svc):
         """BR-1 / DR-4: original_title must be the raw YouTube title, unchanged.

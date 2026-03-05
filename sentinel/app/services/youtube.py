@@ -12,6 +12,7 @@ from urllib.parse import parse_qs, urlparse
 import httpx
 from youtube_transcript_api import (
     CouldNotRetrieveTranscript,
+    FetchedTranscriptSnippet,
     NoTranscriptFound,
     TranscriptsDisabled,
     YouTubeTranscriptApi,
@@ -26,10 +27,11 @@ class TranscriptUnavailableError(Exception):
 class YouTubeResult:
     url: str
     video_id: str
-    transcript: str          # full transcript text, space-joined
-    original_title: str | None  # raw YouTube title — stored as-is, never surfaced to user
+    transcript: str                      # full transcript text, space-joined (pipeline uses this)
+    snippets: list[FetchedTranscriptSnippet]  # raw snippets with start/duration timestamps
+    original_title: str | None           # raw YouTube title — stored as-is, never surfaced to user
     author: str | None
-    published_at: datetime | None  # not available without YouTube Data API
+    published_at: datetime | None        # not available without YouTube Data API
 
 
 class YouTubeService:
@@ -59,7 +61,7 @@ class YouTubeService:
 
         raise ValueError(f"Cannot parse video ID from URL: {url!r}")
 
-    async def _fetch_transcript(self, video_id: str) -> str:
+    async def _fetch_transcript(self, video_id: str) -> list[FetchedTranscriptSnippet]:
         """Fetch transcript from YouTube (blocking call run in executor)."""
         loop = asyncio.get_event_loop()
         api = YouTubeTranscriptApi()
@@ -72,7 +74,7 @@ class YouTubeService:
             raise TranscriptUnavailableError(
                 f"No transcript available for video {video_id!r}: {exc}"
             ) from exc
-        return " ".join(snippet.text for snippet in fetched)
+        return list(fetched)
 
     async def _fetch_metadata(self, url: str) -> dict:
         """Fetch title + author via YouTube's oembed endpoint (no API key needed)."""
@@ -94,14 +96,15 @@ class YouTubeService:
             TranscriptUnavailableError: if the video has no accessible transcript.
         """
         video_id = self.extract_video_id(url)
-        transcript, metadata = await asyncio.gather(
+        snippets, metadata = await asyncio.gather(
             self._fetch_transcript(video_id),
             self._fetch_metadata(url),
         )
         return YouTubeResult(
             url=url,
             video_id=video_id,
-            transcript=transcript,
+            transcript=" ".join(s.text for s in snippets),
+            snippets=snippets,
             original_title=metadata.get("title"),   # raw YouTube title — NOT the generated one
             author=metadata.get("author_name"),
             published_at=None,                       # requires YouTube Data API — out of scope

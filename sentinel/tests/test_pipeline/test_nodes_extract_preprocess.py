@@ -46,6 +46,7 @@ def _make_yt_result(transcript="hello world", original_title="Live Jan 1", autho
         url="https://www.youtube.com/watch?v=test123",
         video_id="test123",
         transcript=transcript,
+        snippets=[],
         original_title=original_title,
         author=author,
         published_at=None,
